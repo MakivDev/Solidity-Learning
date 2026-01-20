@@ -15,6 +15,12 @@ contract voting {
     mapping(uint256 => uint256) public numberOfVotes;
     mapping(address => bool) public accessToVote;
 
+    error ElecrotDoesNotExist(uint256 _pickedElector, uint256 _totalElectors);
+    error UserAlreadyVote();
+    error OnlyOwnerCan();
+    error OwnerCantIt();
+    error TimeOut();
+
     constructor(
         string[] memory _electors,
         uint256 _maxVotes,
@@ -28,14 +34,11 @@ contract voting {
     }
 
     function vote(uint256 _number) public {
-        require(_number < electors.length, "number of electors invalid");
-        require(accessToVote[msg.sender] == false, "User already vote");
-        require(
-            validVote == true,
-            "everyone already have max vote or vote stopped by owner"
-        );
-        require(msg.sender != owner, "owner cant vote");
-        require(electionTime > block.timestamp, "time out");
+        require(_number < electors.length, ElecrotDoesNotExist(_number,electors.length));
+        require(accessToVote[msg.sender] == false, UserAlreadyVote());
+        require(validVote == true,"everyone already have max vote or vote stopped by owner");
+        require(msg.sender != owner, OwnerCantIt());
+        require(electionTime > block.timestamp, TimeOut());
 
         userVotes[msg.sender] = _number;
         numberOfVotes[_number] += 1;
@@ -48,7 +51,7 @@ contract voting {
     }
 
     function stopVote() public {
-        require(msg.sender == owner, "you not owner");
+        require(msg.sender == owner, OnlyOwnerCan());
 
         validVote = false;
     }
